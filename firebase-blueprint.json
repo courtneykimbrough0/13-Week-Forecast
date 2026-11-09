@@ -1,0 +1,54 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information and settings",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email", "description": "User email address" },
+        "displayName": { "type": "string", "description": "Display name" },
+        "createdAt": { "type": "string", "description": "ISO timestamp" }
+      },
+      "required": ["uid", "email"]
+    },
+    "ForecastItem": {
+      "title": "ForecastItem",
+      "description": "Recurring cash flow item (Income, Expense, Liability, Savings, Spend)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Item ID" },
+        "name": { "type": "string", "maxLength": 100, "description": "Description of payment or earnings" },
+        "amount": { "type": "number", "description": "Positive numeric dollar amount" },
+        "category": {
+          "type": "string",
+          "enum": ["income", "fixed_expense", "subscription", "liability", "savings", "spend"],
+          "description": "Category block"
+        },
+        "frequency": {
+          "type": "string",
+          "enum": ["weekly", "biweekly", "semimonthly", "monthly", "onetime"],
+          "description": "Recurrence frequency"
+        },
+        "startDate": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "Start date YYYY-MM-DD" },
+        "dayOfMonth": { "type": "number", "description": "Day of month 1-31" },
+        "dayOfMonth2": { "type": "number", "description": "2nd day of month for semi-monthly" },
+        "active": { "type": "boolean", "description": "Active state toggle" },
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "createdAt": { "type": "string", "description": "Timestamp" },
+        "updatedAt": { "type": "string", "description": "Timestamp" }
+      },
+      "required": ["id", "name", "amount", "category", "frequency", "startDate", "active", "userId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document"
+    },
+    "/users/{userId}/items/{itemId}": {
+      "schema": "ForecastItem",
+      "description": "User recurring forecast entries"
+    }
+  }
+}

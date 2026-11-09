@@ -1,0 +1,8 @@
+{
+  "name": "13-Week Cash Forecast",
+  "description": "A minimalist 13-week cash flow projection tool for recurring income, expenses, liabilities, savings, and remaining spend.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

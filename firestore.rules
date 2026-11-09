@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidForecastItem(data, userId) {
+      return data.keys().hasAll(['id', 'name', 'amount', 'category', 'frequency', 'startDate', 'active', 'userId']) &&
+             data.keys().hasOnly(['id', 'name', 'amount', 'category', 'frequency', 'startDate', 'dayOfMonth', 'dayOfMonth2', 'active', 'userId', 'createdAt', 'updatedAt', 'notes']) &&
+             data.userId == userId &&
+             data.userId == request.auth.uid &&
+             data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.amount is number && data.amount >= 0 &&
+             data.category in ['income', 'fixed_expense', 'subscription', 'liability', 'savings', 'spend'] &&
+             data.frequency in ['weekly', 'biweekly', 'semimonthly', 'monthly', 'onetime'] &&
+             data.startDate is string && data.startDate.size() == 10 &&
+             data.active is bool;
+    }
+
+    // User Profile Documents
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create, update: if isOwner(userId) &&
+        incoming().keys().hasAll(['uid', 'email']) &&
+        incoming().keys().hasOnly(['uid', 'email', 'displayName', 'createdAt']) &&
+        incoming().uid == userId &&
+        incoming().uid == request.auth.uid;
+      allow delete: if false;
+
+      // User Forecast Items Collection
+      match /items/{itemId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(itemId) && isValidForecastItem(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(itemId) && isValidForecastItem(incoming(), userId);
+        allow delete: if isOwner(userId) && isValidId(itemId);
+      }
+    }
+  }
+}
